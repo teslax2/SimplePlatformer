@@ -45,7 +45,10 @@ namespace SimplePlatformer
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             // My Objects
             _jumper = new Jumper(Content.Load<Texture2D>("Jumper"), new Vector2(80, 80),_spriteBatch);
-            _board = new Board(15, 10, Content.Load<Texture2D>("Tile"), _spriteBatch);
+            var _tileTextures = new Texture2D[] {
+                Content.Load<Texture2D>("Tile"),
+                Content.Load<Texture2D>("TileTop") };
+            _board = new Board(15, 10, _tileTextures, _spriteBatch);
             _debugFont = Content.Load<SpriteFont>("DebugFont");
         }
 
@@ -68,13 +71,36 @@ namespace SimplePlatformer
             base.Update(gameTime);
             _jumper.Update(gameTime);
             CheckKeyboardAndReact();
+            if (_board.CreatorOn) { CheckMouseAndReact(); }
+        }
+
+        private void CheckMouseAndReact()
+        {
+            MouseState state = Mouse.GetState();
+            if(state.LeftButton == ButtonState.Pressed) { Board.CurrentBoard.DrawTileByMouse(new Vector2(state.X, state.Y),true); }
+            if (state.RightButton == ButtonState.Pressed) { Board.CurrentBoard.DrawTileByMouse(new Vector2(state.X, state.Y), false); }
         }
 
         private void CheckKeyboardAndReact()
         {
             KeyboardState state = Keyboard.GetState();
             if (state.IsKeyDown(Keys.F5)) { RestartGame(); }
+            if (state.IsKeyDown(Keys.F6)) { TurnOnCreator(); }
+            if (state.IsKeyDown(Keys.F7)) { TurnOffCreator(); }
             if (state.IsKeyDown(Keys.Escape)) { Exit(); }
+        }
+
+        private void TurnOnCreator()
+        {
+            _board.ClearAllInnerTiles();
+            _board.CreatorOn = true;
+            IsMouseVisible = true;
+        }
+
+        private void TurnOffCreator()
+        {
+            _board.CreatorOn = false;
+            IsMouseVisible = false;
         }
 
         private void RestartGame()
