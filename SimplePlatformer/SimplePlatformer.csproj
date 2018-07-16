@@ -43,7 +43,6 @@
   <ItemGroup>
     <Compile Include="Board.cs" />
     <Compile Include="Jumper.cs" />
-    <Compile Include="MapCreator.cs" />
     <Compile Include="MovementWrapper.cs" />
     <Compile Include="SimplePlatformerGame.cs" />
     <Compile Include="Program.cs" />

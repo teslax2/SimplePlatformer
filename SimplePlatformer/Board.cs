@@ -16,9 +16,10 @@ namespace SimplePlatformer
         public Tile[,] Tiles { get; set; }
         public int Columns { get { return _columns; } set { if (value >= 0) { _columns = value; } } }
         public int Rows { get { return _rows; } set { if (value >= 0) { _rows = value; } } }
-        public Texture2D TileTexture { get; set; }
+        public Texture2D[] TileTexture { get; set; }
         public SpriteBatch SpriteBatch { get; set; }
         public static Board CurrentBoard { get; private set; }
+        public bool CreatorOn { get; set; }
 
         /// <summary>
         /// Define board dimensions and tile texture
@@ -27,7 +28,7 @@ namespace SimplePlatformer
         /// <param name="rows"></param>
         /// <param name="tileTexture"></param>
         /// <param name="spriteBatch"></param>
-        public Board(int columns, int rows, Texture2D tileTexture, SpriteBatch spriteBatch)
+        public Board(int columns, int rows, Texture2D[] tileTexture, SpriteBatch spriteBatch)
         {
             Columns = columns;
             Rows = rows;
@@ -36,17 +37,13 @@ namespace SimplePlatformer
             CreateNewBoard();
             CurrentBoard = this;
         }
-
+        #region Init
         public void CreateNewBoard()
         {
             InitializeAllTilesAndBlockSomeOnly();
             SetAllBorderTilesBlocked();
             SetTopLeftTileUnblocked();
-        }
-
-        private void SetTopLeftTileUnblocked()
-        {
-            Tiles[1, 1].IsBlocked = false;
+            SetDifferentTextureForSurfaceTiles();
         }
 
         private void InitializeAllTilesAndBlockSomeOnly()
@@ -58,35 +55,65 @@ namespace SimplePlatformer
             {
                 for (int y = 0; y < Rows; y++)
                 {
-                    Tiles[x, y] = new Tile(TileTexture, new Vector2(TileTexture.Width * x, TileTexture.Height * y), SpriteBatch, random.Next(5) == 0);
+                    Tiles[x, y] = new Tile(TileTexture[0], new Vector2(TileTexture[0].Width * x, TileTexture[0].Height * y), SpriteBatch, random.Next(5) == 0);
                 }
             }
         }
 
-        private void DrawBoardByCreator()
-        {
-            Tiles = new Tile[Columns, Rows];
-            SetAllBorderTilesBlocked();
-            SetTopLeftTileUnblocked();
-            MapCreator.StartDrawing();
-        }
-
-        /// <summary>
-        /// Draw border from tiles
-        /// </summary>
         private void SetAllBorderTilesBlocked()
         {
-            for(int x=0; x < Columns; x++)
+            for (int x = 0; x < Columns; x++)
             {
-                for(int y=0; y < Rows; y++)
+                for (int y = 0; y < Rows; y++)
                 {
-                    if (x == 0 || x == Columns-1 || y == 0 || y == Rows - 1)
+                    if (x == 0 || x == Columns - 1 || y == 0 || y == Rows - 1)
                     {
                         Tiles[x, y].IsBlocked = true;
                     }
                 }
             }
         }
+
+        private void SetTopLeftTileUnblocked()
+        {
+            Tiles[1, 1].IsBlocked = false;
+        }
+
+        private void SetDifferentTextureForSurfaceTiles()
+        {
+            for(int y=1; y<Rows; y++)
+            {
+                for(int x=0; x<Columns; x++)
+                {
+                    if (!Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[1]; }
+                    else if (Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[0]; }
+                }
+            }
+        }
+        #endregion
+
+        #region Creator
+        public void ClearAllInnerTiles()
+        {
+            for(int x = 1; x < Columns-1; x++)
+            {
+                for (int y = 1; y < Rows-1; y++)
+                {
+                    Tiles[x, y].IsBlocked = false;
+                }
+            }
+
+        }
+        
+        public void DrawTileByMouse(Vector2 vector2,bool drawOrRemove)
+        {
+            var column = (int)vector2.X / TileTexture[0].Width;
+            var row = (int)vector2.Y / TileTexture[0].Height;
+            if(row >= Rows || column >= Columns) { return; }
+            Tiles[column, row].IsBlocked = drawOrRemove;
+            SetDifferentTextureForSurfaceTiles();
+        }
+        #endregion
 
         /// <summary>
         /// Draw all tiles on the board
@@ -99,17 +126,8 @@ namespace SimplePlatformer
             }
         }
 
-        public bool HasRoomForRectangle(Rectangle rectangleToCheck)
-        {
-            foreach(var tile in Tiles)
-            {
-                if(tile.IsBlocked && tile.Bounds.Intersects(rectangleToCheck))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        #region Collision
+
 
         public Vector2 WhereCanIGetTo(Vector2 originalPosition, Vector2 destination, Rectangle boundingRectangle)
         {
@@ -133,6 +151,23 @@ namespace SimplePlatformer
             return move.FurthestAvailableLocationSoFar;
         }
 
+        private Rectangle CreateRectangleAtPosition(Vector2 positionToTry, int width, int height)
+        {
+            return new Rectangle((int)positionToTry.X, (int)positionToTry.Y, width, height);
+        }
+
+        public bool HasRoomForRectangle(Rectangle rectangleToCheck)
+        {
+            foreach (var tile in Tiles)
+            {
+                if (tile.IsBlocked && tile.Bounds.Intersects(rectangleToCheck))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private Vector2 CheckPossibleNonDiagonalMovement(MovementWrapper wrapper, int i)
         {
             if (wrapper.IsDiagonalMove)
@@ -151,10 +186,7 @@ namespace SimplePlatformer
             return wrapper.FurthestAvailableLocationSoFar;
         }
 
-        private Rectangle CreateRectangleAtPosition(Vector2 positionToTry, int width, int height)
-        {
-            return new Rectangle((int)positionToTry.X, (int)positionToTry.Y, width, height);
-        }
+        #endregion
     }
 
 }
