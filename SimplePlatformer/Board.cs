@@ -44,7 +44,9 @@ namespace SimplePlatformer
             SetAllBorderTilesBlocked();
             SetTopLeftTileUnblocked();
             SetDifferentTextureForSurfaceTiles();
+            SetSomeSlopes();
         }
+
 
         private void InitializeAllTilesAndBlockSomeOnly()
         {
@@ -55,7 +57,7 @@ namespace SimplePlatformer
             {
                 for (int y = 0; y < Rows; y++)
                 {
-                    Tiles[x, y] = new Tile(TileTexture[0], new Vector2(TileTexture[0].Width * x, TileTexture[0].Height * y), SpriteBatch, random.Next(5) == 0);
+                    Tiles[x, y] = new Tile(TileTexture[(int)TileSlope.Flat], new Vector2(TileTexture[0].Width * x, TileTexture[0].Height * y), SpriteBatch, random.Next(5) == 0);
                 }
             }
         }
@@ -83,10 +85,37 @@ namespace SimplePlatformer
         {
             for(int y=1; y<Rows; y++)
             {
-                for(int x=0; x<Columns; x++)
+                for(int x=1; x<Columns-1; x++)
                 {
-                    if (!Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[1]; }
-                    else if (Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[0]; }
+                    if (!Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[(int)TileSlope.Top]; Tiles[x, y].TileSlope = TileSlope.Top; }
+                    else if (Tiles[x, y - 1].IsBlocked) { Tiles[x, y].Texture = TileTexture[(int)TileSlope.Flat]; Tiles[x, y].TileSlope = TileSlope.Flat; }
+                }
+            }
+        }
+
+        private void SetSomeSlopes()
+        {
+            var random = new Random();
+            for (int x = 1; x < Columns-1; x++)
+            {
+                for (int y = 1; y < Rows-1; y++)
+                {
+                    if (Tiles[x,y].IsBlocked && Tiles[x, y].TileSlope == TileSlope.Top)
+                    {
+                        switch (random.Next(2))
+                        {
+                            case 0:
+                                Tiles[x, y].Texture = TileTexture[(int)TileSlope.Left];
+                                Tiles[x, y].TileSlope = TileSlope.Left;
+                                break;
+                            case 1:
+                                Tiles[x, y].Texture = TileTexture[(int)TileSlope.Right];
+                                Tiles[x, y].TileSlope = TileSlope.Right;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
             }
         }

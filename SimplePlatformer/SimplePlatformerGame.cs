@@ -47,7 +47,9 @@ namespace SimplePlatformer
             _jumper = new Jumper(Content.Load<Texture2D>("Jumper"), new Vector2(80, 80),_spriteBatch);
             var _tileTextures = new Texture2D[] {
                 Content.Load<Texture2D>("Tile"),
-                Content.Load<Texture2D>("TileTop") };
+                Content.Load<Texture2D>("TileTop"),
+                Content.Load<Texture2D>("TileLeft"),
+                Content.Load<Texture2D>("TileRight") };
             _board = new Board(15, 10, _tileTextures, _spriteBatch);
             _debugFont = Content.Load<SpriteFont>("DebugFont");
         }

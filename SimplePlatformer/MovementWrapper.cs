@@ -15,9 +15,11 @@ namespace SimplePlatformer
         public bool IsDiagonalMove { get; private set; }
         public Vector2 OneStep { get; private set; }
         public Rectangle BoundingRectangle { get; set; }
+        public Vector2 OriginalPosition { get; set; }
 
         public MovementWrapper(Vector2 originalPosition, Vector2 destination, Rectangle boundingRectangle)
         {
+            OriginalPosition = originalPosition;
             MovementToTry = destination - originalPosition;
             FurthestAvailableLocationSoFar = originalPosition;
             NumberOfStepsToBreakMovementInto = (int)(MovementToTry.Length() * 2) + 1;
